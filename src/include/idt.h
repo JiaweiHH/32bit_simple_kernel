@@ -7,11 +7,11 @@ void init_idt();
 
 /* 中断描述符 */
 typedef struct idt_entry_t {
-  uint16_t base_lo; /* 中断处理函数地址 15 ~ 0bit */
-  uint16_t sel;     /* 目标代码 段描述符选择子，从 GDT 中取得保存中断处理函数的段描述符 */
+  uint16_t base_lo; /* 中断服务例程地址 15 ~ 0bit */
+  uint16_t sel;     /* 目标代码 段描述符选择子，从 GDT 中取得保存中断服务例程的段描述符 */
   uint8_t always0;  /* 置 0 段 */
   uint8_t flags;    /* 标志位 */
-  uint16_t base_hi; /* 中断处理函数地址 31 ~ 16bit */
+  uint16_t base_hi; /* 中断服务例程地址 31 ~ 16bit */
 } __attribute__((packed)) idt_entry_t;
 
 /* IDTR 寄存器，结构和 GDTR 一样 */
@@ -47,8 +47,8 @@ void register_interrupt_handler(uint8_t, interrupt_handler_t);
 void isr_handler(pt_regs *);
 
 /** 
- * 声明中断处理函数
- * 0 ~ 19 属于 cpu 异常中断，20 ~ 31 被 intel 保留，32 ~ 255 属于用户自定义中断
+ * 声明异常处理函数
+ * 0 ~ 19 属于 cpu 异常中断，20 ~ 31 被 intel 保留，32 ~ 255 属于用户自定义中断包括硬件终端
  */
 void isr0();        /* 0 #DE 除 0 异常 */
 void isr1();        /* 1 #DB 调试异常 */
@@ -86,5 +86,49 @@ void isr31();
 
 // 32 ~ 255 用户自定义
 void isr255();
+
+/* IRQ 处理函数 */
+void irq_handler(pt_regs *regs);
+/* 定义 IRQ */
+#define IRQ0 32     /* 计时器 */
+#define IRQ1 33     /* 键盘 */
+#define IRQ2 34
+#define IRQ3 35
+#define IRQ4 36
+#define IRQ5 37
+#define IRQ6 38
+#define IRQ7 39
+#define IRQ8 40
+#define IRQ9 41
+#define IRQ10 42
+#define IRQ11 43
+#define IRQ12 44
+#define IRQ13 45
+#define IRQ14 46
+#define IRQ15 47
+
+/* irq 和 isr 一样，都是通过 macro 声明和定义 */
+void irq0();
+void irq1();
+void irq2();
+void irq3();
+void irq4();
+void irq5();
+void irq6();
+void irq7();
+void irq8();
+void irq9();
+void irq10();
+void irq11();
+void irq12();
+void irq13();
+void irq14();
+void irq15();
+
+/**
+ * IRQ 和 ISR 处理过程很相似
+ * ISR 处理过程：isri -> isr_common_stub -> isr_handler -> 具体的处理函数
+ * IRQ 处理过程：irqi -> irq_common_stub -> irq_handler -> 具体的处理函数
+ */
 
 #endif

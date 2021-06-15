@@ -10,7 +10,7 @@ idt_ptr_t idt_ptr;
 /* 中断处理函数数组 */
 interrupt_handler_t interrupt_handlers[256];
 
-/* 调用中断处理函数 */
+/* isr 处理函数 */
 void isr_handler(pt_regs *regs) {
   if (interrupt_handlers[regs->int_no]) {
     interrupt_handlers[regs->int_no](regs);
@@ -32,7 +32,40 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
 /* 加载 IDTR 的函数 */
 extern void idt_flush(uint32_t);
 
+/**
+ * 重新映射 IRQ 表，两片级联的 Intel 8259A 芯片
+ * 主片端口 0x20 命令端口，0x21 数据端口
+ * 从片端口 0xA0 命令端口，0xA1 数据端口
+ */
+static inline void init_8259APIC() {
+  /* 初始化主片和从片 */
+  outb(0x20, 0x11);
+  outb(0xA0, 0x11);
+
+  /* 设置主片 IRQ 从 0x20 号中断开始 */
+  outb(0x21, 0x20);
+  /* 设置从片 IRQ 从 0x28 号中断开始 */
+  outb(0xA1, 0x28);
+
+  /**
+   * 从片的 IR1(0010) 引脚和主片的 IR2(0100) 相连
+   * 设置主片的 IR2 引脚连接从片的 IR1 引脚
+   */
+  outb(0x21, 0x04);
+  outb(0xA1, 0x02);
+
+  /* 设置主片和从片按照 8086 的方式工作 */
+  outb(0x21, 0x01);
+  outb(0xA1, 0x01);
+
+  /* 设置主片和从片允许中断 */
+  outb(0x21, 0x0);
+  outb(0xA1, 0x0);
+}
+
 void init_idt() {
+  init_8259APIC();
+
   bzero((uint8_t *)&interrupt_handlers, sizeof(interrupt_handler_t) * 256);
   idt_ptr.limit = sizeof(idt_entry_t) * 256 - 1;
   idt_ptr.base = (uint32_t)&idt_entries;
@@ -71,8 +104,36 @@ void init_idt() {
   idt_set_gate(29, (uint32_t)isr29, 0x08, 0x8E);
   idt_set_gate(30, (uint32_t)isr30, 0x08, 0x8E);
   idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8E);
+  /* 设置 32-47 号中断描述符 */
+  idt_set_gate(32, (uint32_t)irq0, 0x08, 0x8E);
+  idt_set_gate(33, (uint32_t)irq1, 0x08, 0x8E);
+  idt_set_gate(34, (uint32_t)irq2, 0x08, 0x8E);
+  idt_set_gate(35, (uint32_t)irq3, 0x08, 0x8E);
+  idt_set_gate(36, (uint32_t)irq4, 0x08, 0x8E);
+  idt_set_gate(37, (uint32_t)irq5, 0x08, 0x8E);
+  idt_set_gate(38, (uint32_t)irq6, 0x08, 0x8E);
+  idt_set_gate(39, (uint32_t)irq7, 0x08, 0x8E);
+  idt_set_gate(40, (uint32_t)irq8, 0x08, 0x8E);
+  idt_set_gate(41, (uint32_t)irq9, 0x08, 0x8E);
+  idt_set_gate(42, (uint32_t)irq10, 0x08, 0x8E);
+  idt_set_gate(43, (uint32_t)irq11, 0x08, 0x8E);
+  idt_set_gate(44, (uint32_t)irq12, 0x08, 0x8E);
+  idt_set_gate(45, (uint32_t)irq13, 0x08, 0x8E);
+  idt_set_gate(46, (uint32_t)irq14, 0x08, 0x8E);
+  idt_set_gate(47, (uint32_t)irq15, 0x08, 0x8E);
   /* 255 用来实现系统调用 */
   idt_set_gate(255, (uint32_t)isr255, 0x08, 0x8E);
   /* 设置 IDTR 寄存器 */
   idt_flush((uint32_t)&idt_ptr);
+}
+
+/* irq 处理函数 */
+void irq_handler(pt_regs *regs) {
+  /* 主片处理 0-7 中断，从片处理 8-15 中断 */
+  if(regs->int_no >= 40)
+    outb(0xA0, 0x20);   // 发送重设信号给从片
+  outb(0x20, 0x20);     // 发送重设信号给主片
+
+  if(interrupt_handlers[regs->int_no])
+    interrupt_handlers[regs->int_no](regs);
 }

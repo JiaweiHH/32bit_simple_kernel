@@ -1,7 +1,7 @@
 ; nasm 宏定义语法： %macro 宏名字 参数个数，另外 %n 代表第 n 个参数
 
 ; 定义两个宏来统一处理有错误代码和没有错误代码的中断，以便在清理的时候不需要分类
-; 函数的参数是中断号，用来声明和定义该中断号的中断处理函数
+; 函数的参数是中断号，用来声明和定义该中断号的 isr
 ; 主要体现在没有错误代码的中断 push 0 来占用一个错误代码位置
 %macro ISR_NOERRCODE 1
 [GLOBAL isr%1]          ; 声明一个函数
@@ -9,7 +9,7 @@ isr%1:                  ; 定义该声明的函数
   cli                   ; 关闭中断
   push 0                ; push 无效的中断错误代码
   push %1               ; push 中断号
-  jmp isr_common_stub   ; 中断处理函数的公共部分
+  jmp isr_common_stub   ; isr 的公共部分
 %endmacro
 
 %macro ISR_ERRCODE 1
@@ -20,7 +20,7 @@ isr%1:
   jmp isr_common_stub
 %endmacro
 
-; 使用上面声明的宏定义中断处理函数
+; 使用上面声明的宏定义 isr
 ISR_NOERRCODE  0    ; 0 #DE 除 0 异常
 ISR_NOERRCODE  1    ; 1 #DB 调试异常
 ISR_NOERRCODE  2    ; 2 NMI
@@ -59,11 +59,10 @@ ISR_NOERRCODE 31
 ISR_NOERRCODE 255
 
 
-; 所有中断处理函数共有的保护现场操作
-
+; 所有 isr 共有的保护现场操作
 [GLOBAL isr_common_stub]
 [EXTERN isr_handler]
-; 中断服务程序
+; isr 公共部分
 isr_common_stub:
   pusha             ; push edi, esi, ebp, esp, ebx, edx, ecx, eax
   mov ax, ds
@@ -77,7 +76,7 @@ isr_common_stub:
   mov ss, ax
 
   push esp          ; 此时 esp 寄存器里面的值等价于 pt_regs 结构体指针
-  call isr_handler  ; 每个中断处理函数自己的逻辑部分
+  call isr_handler  ; isr_handler 里面调用该中断的中断处理函数
   add esp, 4        ; 下面开始恢复寄存器的值
 
   pop ebx;          ; 恢复原来的数据段描述符
@@ -96,4 +95,60 @@ idt_flush:
   mov eax, [esp + 4]  ; 和设置 GDTR 的时候一样先获取参数，也就是传递进来的中断描述符表地址
   lidt [eax]          ; 设置 IDTR 寄存器
   ret
+.end:
+
+; 构造 irq 函数的宏，第一个参数是 irq 编号，第二个参数是中断号
+%macro IRQ 2
+[GLOBAL irq%1]
+irq%1:
+  cli
+  push byte 0
+  push byte %2
+  jmp irq_common_stub
+%endmacro
+
+IRQ   0,    32 	; 电脑系统计时器
+IRQ   1,    33 	; 键盘
+IRQ   2,    34 	; 与 IRQ9 相接，MPU-401 MD 使用
+IRQ   3,    35 	; 串口设备
+IRQ   4,    36 	; 串口设备
+IRQ   5,    37 	; 建议声卡使用
+IRQ   6,    38 	; 软驱传输控制使用
+IRQ   7,    39 	; 打印机传输控制使用
+IRQ   8,    40 	; 即时时钟
+IRQ   9,    41 	; 与 IRQ2 相接，可设定给其他硬件
+IRQ  10,    42 	; 建议网卡使用
+IRQ  11,    43 	; 建议 AGP 显卡使用
+IRQ  12,    44 	; 接 PS/2 鼠标，也可设定给其他硬件
+IRQ  13,    45 	; 协处理器使用
+IRQ  14,    46 	; IDE0 传输控制使用
+IRQ  15,    47 	; IDE1 传输控制使用
+
+[GLOBAL irq_common_stub]
+[EXTERN irq_handler]
+irq_common_stub:
+  pusha             ; push edi, esi, ebp, esp, ebx, edx, ecx, eax
+  mov ax, ds
+  push eax          ; 保存数据段描述符
+  
+  mov ax, 0x10      ; 加载内核数据段描述符表
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
+  mov ss, ax
+
+  push esp          ; 此时 esp 寄存器里面的值等价于 pt_regs 结构体指针
+  call irq_handler  ; irq_handler 里面调用该中断的中断处理函数
+  add esp, 4        ; 下面开始恢复寄存器的值
+
+  pop ebx;          ; 恢复原来的数据段描述符
+  mov ds, bx
+  mov es, bx
+  mov fs, bx
+  mov gs, bx
+  mov ss, bx
+  popa              ; pop edi, esi, ebp, esp, ebx, edx, ecx, eax
+  add esp, 8        ; 清理栈里面的 byte0 和 中断号
+  iret              ; cpu 自动入栈部分出栈
 .end:
