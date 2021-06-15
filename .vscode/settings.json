@@ -7,6 +7,13 @@
     "ostream": "cpp",
     "tuple": "cpp",
     "type_traits": "cpp",
-    "utility": "cpp"
+    "utility": "cpp",
+    "common.h": "c",
+    "elf.h": "c",
+    "mstring.h": "c",
+    "debug.h": "c",
+    "melf.h": "c",
+    "mutilboot.h": "c",
+    "types.h": "c"
   }
 }

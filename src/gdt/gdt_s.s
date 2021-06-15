@@ -18,8 +18,11 @@ gdt_flush:
   mov fs, ax
   mov gs, ax
   mov ss, ax
-  ; 在这里 cs 寄存器还是旧的 cs
+
+  ; 在 jmp 指令之前 cs 寄存器还是旧的 cs
   ; far jump 需要切换 segment 重新查找 GDT，首先设置 cs 寄存器然后使用它的绝对地址跳转到 .flush
+  ; 另外在这里很多指令可能已经进入了流水线，但是实模式下的指令进入保护模式之后执行方式和结果可能会不同，
+  ; 因此 jmp 指令的另一个作用是清空流水线
   jmp 0x08:.flush
 
 .flush:
