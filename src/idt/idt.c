@@ -10,6 +10,14 @@ idt_ptr_t idt_ptr;
 /* 中断处理函数数组 */
 interrupt_handler_t interrupt_handlers[256];
 
+/**
+ * @num: 中断号
+ * @func: 中断处理函数
+ */
+inline void register_interrupt_handler(uint8_t num, interrupt_handler_t func) {
+  interrupt_handlers[num] = func;
+}
+
 /* isr 处理函数 */
 void isr_handler(pt_regs *regs) {
   if (interrupt_handlers[regs->int_no]) {
