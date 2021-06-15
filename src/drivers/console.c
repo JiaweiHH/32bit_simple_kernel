@@ -89,7 +89,7 @@ void console_putc_color(char c, real_color_t back, real_color_t fore) {
 
 void console_write(char *cstr) {
   while(*cstr) {
-    console_putc_color(*cstr++, rc_back, rc_white);
+    console_putc_color(*cstr++, rc_black, rc_white);
   }
 }
 

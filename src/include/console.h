@@ -6,7 +6,7 @@
 #include "types.h"
 
 enum real_color {
-  rc_back = 0,
+  rc_black = 0,
   rc_blue = 1,
   rc_green = 2,
   rc_cyan = 3,
