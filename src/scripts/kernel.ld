@@ -8,6 +8,7 @@ SECTIONS
     /* 段起始位置 */
 
     . = 0x100000;
+    PROVIDE(kern_start = .);    /* 链接器导出内核地址起始位置 */
     .text :
     {
         *(.text)
@@ -38,6 +39,7 @@ SECTIONS
         *(.stabstr)
         . = ALIGN(4096);
     }
+    PROVIDE(kern_end = .);      /* 链接器导出内核地址结束位置 */
 
     /DISCARD/ : { *(.comment) *(.eh_frame) }
 }

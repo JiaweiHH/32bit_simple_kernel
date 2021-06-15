@@ -32,7 +32,7 @@ struct mutilboot {
   /**
    * BIOS 提供的内存分布缓冲区地址和长度
    * mmap_addr 是缓冲区的地址，mmap_length 是缓冲区的大小
-   * 缓冲区由 mmap_entry_t 组成
+   * 缓冲区是 mmap_entry_t 组成的数组
    */
   uint32_t mmap_length;
   uint32_t mmap_addr;
@@ -52,6 +52,7 @@ struct mutilboot {
 } __attribute__((packed));
 typedef struct mutilboot mutilboot_t;
 
+/* GRUB 探测到的内存结果按每个分段整理为 mmap_entry 结构体的数组 */
 struct mmap_entry {
   uint32_t size;           // 除去 size 本身的大小
   uint32_t base_addr_low;  // 缓冲区地址的低 32bit
