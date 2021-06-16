@@ -25,7 +25,7 @@ uint32_t phy_page_count;
 void init_pmm() {
   /* BIOS 获取的内存范围 [mmap_start_addr, mmap_end_addr) */
   mmap_entry_t *mmap_start_addr = (mmap_entry_t *)glb_mboot_ptr->mmap_addr;
-  mmap_entry_t *mmap_end_addr = (mmap_entry_t *)glb_mboot_ptr->mmap_addr + glb_mboot_ptr->mmap_length;
+  mmap_entry_t *mmap_end_addr = (mmap_entry_t *)(glb_mboot_ptr->mmap_addr + glb_mboot_ptr->mmap_length);
 
   mmap_entry_t *map_entry;
   for(map_entry = mmap_start_addr; map_entry < mmap_end_addr; ++map_entry) {
