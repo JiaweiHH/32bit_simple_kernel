@@ -5,36 +5,44 @@
 ENTRY(start)
 SECTIONS
 {
+    
+    PROVIDE(kern_start = 0xC0100000);    /* 链接器导出内核地址起始位置 */
     /* 段起始位置 */
-
     . = 0x100000;
-    PROVIDE(kern_start = .);    /* 链接器导出内核地址起始位置 */
-    .text :
+    .init.text :
+    {
+        *(.init.text)
+        . = ALIGN(4096);
+    }
+    .init.data :
+    {
+        *(.init.data)
+        . = ALIGN(4096);
+    }
+    . += 0xC0000000;
+
+    .text : AT(ADDR(.text) - 0xC0000000)
     {
         *(.text)
         . = ALIGN(4096);
     }
-
-    .data :
+    .data : AT(ADDR(.data) - 0xC0000000)
     {
         *(.data)
         *(.rodata)
         . = ALIGN(4096);
     }
-
-    .bss :
+    .bss : AT(ADDR(.bss) - 0xC0000000)
     {
         *(.bss)
         . = ALIGN(4096);
     }
-
-    .stab :
+    .stab : AT(ADDR(.stab) - 0xC0000000)
     {
         *(.stab)
         . = ALIGN(4096);
     }
-    
-    .stabstr :
+    .stabstr : AT(ADDR(.stabstr) - 0xC0000000)
     {
         *(.stabstr)
         . = ALIGN(4096);

@@ -21,32 +21,27 @@ MBOOT_CHECKSUM      equ     -(MBOOT_HEADER_MAGIC+MBOOT_HEADER_FLAGS)
 
 
 [BITS 32]   ; 以 32-bit 方式编译
-section .text
+section .init.text      ; 临时代码段开始
 
 dd MBOOT_HEADER_MAGIC   ; GRUB 通过魔数判断该映像是否支持
 dd MBOOT_HEADER_FLAGS   ; GRUB 的一些加载选项
 dd MBOOT_CHECKSUM       ; 
 
 [GLOBAL start]          ; 提供给链接器，声明内核代码入口
-[GLOBAL glb_mboot_ptr]  ; 声明 struct mutiboot * 变量
+[GLOBAL mboot_ptr_tmp]  ; 声明 struct mutiboot * 变量
 [EXTERN kern_entry]     ; 声明内核 C 代码的入口函数
 
 ; 按照协议 GRUB 把一些计算机硬件和我们内核文件相关的信息放在了一个结构体中
 ; 并且将这个结构体指针放在了 ebx 寄存器中
 start:
   cli                       ; 此时还没有设置好保护模式的中断处理，需要关闭中断
+  mov [mboot_ptr_tmp], ebx  ; ebx 存储的地址存入全局变量
   mov esp, STACK_TOP        ; 设置内核栈地址
   mov ebp, 0                ; 帧指针改为 0
   and esp, 0ffffff0H        ; 栈地址 16 字节对齐
-  mov [glb_mboot_ptr], ebx  ; ebx 存储的指针存入全局变量
   call kern_entry           ; 调用内核入口函数
-stop:       ; 入口函数返回之后执行这里
-  hlt       ; 停机指令
-  jmp stop
 
-section .bss
-stack:
-  resb 32768    ; reserve 32768 bytes 作为内核栈
-glb_mboot_ptr:
-  resb 4        ; reserve 4 bytes，全局的 mutilboot 结构体指针
-STACK_TOP equ $-stack-1 ; 内核栈顶，$ 指代当前地址
+section .init.data          ; 开启分页之前临时的数据段
+stack: times 1024 db 0      ; 临时的内核栈
+STACK_TOP equ $-stack-1     ; 内核栈顶，$ 指代当前地址
+mboot_ptr_tmp: dd 0         ; 全局的 mutilboot 指针

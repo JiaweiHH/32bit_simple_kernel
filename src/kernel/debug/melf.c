@@ -1,6 +1,7 @@
 #include "melf.h"
 #include "common.h"
 #include "mstring.h"
+#include "vmm.h"
 
 /* 在 mutilboot 提供的信息中寻找字符串表和符号表 */
 elf_t elf_from_mutilboot(mutilboot_t *mb) {
@@ -10,13 +11,13 @@ elf_t elf_from_mutilboot(mutilboot_t *mb) {
   uint32_t shstrtab = sh[mb->shndx].addr; // 获取段表字符串表地址
   for (i = 0; i < mb->num; ++i) {         // 寻找字符串表和符号表
     const char *name =
-        (const char *)(shstrtab + sh[i].name); // 查找段表字符串表找到段的名字
+        (const char *)(shstrtab + sh[i].name + PAGE_OFFSET); // 查找段表字符串表找到段的名字
     /* 判断段的名字是不是我们需要寻找的字符串表和符号表 */
     if (strcmp(name, ".strtab") == 0) {
-      elf.strtab = (const char *)sh[i].addr;
+      elf.strtab = (const char *)(sh[i].addr + PAGE_OFFSET);
       elf.strtabsz = sh[i].size;
     } else if (strcmp(name, ".symtab") == 0) {
-      elf.symtab = (elf_symbol_t *)sh[i].addr;
+      elf.symtab = (elf_symbol_t *)(sh[i].addr + PAGE_OFFSET);
       elf.symtabsz = sh[i].size;
     }
   }

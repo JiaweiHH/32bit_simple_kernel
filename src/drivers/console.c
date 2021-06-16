@@ -1,5 +1,6 @@
 #include "console.h"
 #include "common.h"
+#include "vmm.h"
 
 /* 屏幕被分成 25*80 的二维数组 */
 /**
@@ -12,7 +13,8 @@
    * Content: | ASCII                 | FG      | BG      |
    */
 
-static uint16_t *video_memory = (uint16_t *)0xB8000;  // 地址空间显示显卡字符的起始地址是 0xB8000
+// 地址空间显示显卡字符的起始地址是 0xB8000，这是一个物理地址在分页开启之后我们把这个物理地址加上了一个偏移作为虚拟地址
+static uint16_t *video_memory = (uint16_t *)(0xB8000 + PAGE_OFFSET);
 static uint8_t cursor_x = 0, cursor_y = 0;  // 屏幕光标的坐标，x 是横坐标，y 是纵坐标
 
 static void move_cursor() {

@@ -63,5 +63,6 @@ struct mmap_entry {
 } __attribute__((packed));
 typedef struct mmap_entry mmap_entry_t;
 
-extern mutilboot_t *glb_mboot_ptr;  // 定义在 boot.s
+extern mutilboot_t *mboot_ptr_tmp;  // 内核未建立分页机制前暂存的指针
+extern mutilboot_t *glb_mboot_ptr;  // 定义在 boot.s，分页机制建立之后的指针
 #endif // INCLUDE_MUTILBOOT_H_
