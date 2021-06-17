@@ -21,7 +21,7 @@ SECTIONS
     }
     . += 0xC0000000;
 
-    .text : AT(ADDR(.text) - 0xC0000000)
+    .text : AT(ADDR(.text) - 0xC0000000)    /* AT 在文件中的存放位置 */
     {
         *(.text)
         . = ALIGN(4096);

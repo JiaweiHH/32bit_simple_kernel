@@ -31,6 +31,8 @@ void init_pmm() {
   for(map_entry = mmap_start_addr; map_entry < mmap_end_addr; ++map_entry) {
     if(map_entry->type == 1 && map_entry->base_addr_low == 0x100000) {  /* 如果是可用内存（type = 1） */
       /* 这里只需要用到低 32bit 就够了 */
+
+      /* 跳过内核所在的物理地址 */
       uint32_t page_addr = map_entry->base_addr_low + (uint32_t)(kern_end - kern_start);
       uint32_t length = map_entry->base_addr_low + map_entry->length_low;
 

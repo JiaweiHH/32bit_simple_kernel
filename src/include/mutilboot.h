@@ -25,8 +25,8 @@ struct mutilboot {
    * ELF 格式内核映像文件的 section 表
    */
   uint32_t num;   // section 数目
-  uint32_t size;  // 每项的大小
-  uint32_t addr;  // 段的起始地址
+  uint32_t size;  // section 大小
+  uint32_t addr;  // 段表地址
   uint32_t shndx; // 段表字符串表的索引
 
   /**
