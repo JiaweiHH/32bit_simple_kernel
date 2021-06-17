@@ -5,6 +5,7 @@
 #include "timer.h"
 #include "pmm.h"
 #include "vmm.h"
+#include "heap.h"
 
 /* 内核初始化函数 */
 void kern_init();
@@ -89,17 +90,11 @@ void kern_init() {
   show_memory_map();
 
   init_pmm();
+  init_vmm();
+  init_heap();
+
   printk_color(rc_black, rc_red, "\nThe Count of Physical Memory Page is: %u\n\n", phy_page_count);
-  uint32_t alloc_addr = NULL;
-  printk_color(rc_black, rc_light_brown, "Test Physical Memory Alloc:\n");
-  alloc_addr = pmm_alloc_page();
-  printk_color(rc_black, rc_light_brown, "Alloc Physical Addr 0x%08X\n", alloc_addr);
-  alloc_addr = pmm_alloc_page();
-  printk_color(rc_black, rc_light_brown, "Alloc Physical Addr 0x%08X\n", alloc_addr);
-  alloc_addr = pmm_alloc_page();
-  printk_color(rc_black, rc_light_brown, "Alloc Physical Addr 0x%08X\n", alloc_addr);
-  alloc_addr = pmm_alloc_page();
-  printk_color(rc_black, rc_light_brown, "Alloc Physical Addr 0x%08X\n", alloc_addr);
+  test_heap();
 
   while(1) {
     asm volatile ("hlt");
