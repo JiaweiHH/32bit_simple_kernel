@@ -6,6 +6,9 @@
 #include "pmm.h"
 #include "vmm.h"
 #include "heap.h"
+#include "msched.h"
+#include "task.h"
+#include "common.h"
 
 /* 内核初始化函数 */
 void kern_init();
@@ -14,7 +17,8 @@ void kern_init();
 mutilboot_t *glb_mboot_ptr;
 
 /* 开启分页之后的内核栈 */
-char kern_stack[STACK_SIZE];
+char kern_stack[STACK_SIZE] __attribute__((aligned(16)));
+uint32_t kern_stack_top;
 
 /* 内核使用的临时页表和页目录，保存在 1MB 以下的内存地址 */
 __attribute__((section(".init.data"))) pgd_t *pgd_tmp   = (pgd_t *)0x1000;
@@ -57,7 +61,7 @@ __attribute__((section(".init.text"))) void kern_entry() {
   asm volatile ("mov %0, %%cr0" : : "r"(cr0));  // 将 cr0 变量的值设置在 cr0 寄存器中
 
   /* 切换内核栈 */
-  uint32_t kern_stack_top = ((uint32_t)kern_stack + STACK_SIZE) & 0xfffffff0;
+  kern_stack_top = ((uint32_t)kern_stack + STACK_SIZE) & 0xfffffff0;
   asm volatile (
     "mov %0, %%esp\n\t"
     "xor %%ebp, %%esp" :: "r"(kern_stack_top)
@@ -71,6 +75,17 @@ __attribute__((section(".init.text"))) void kern_entry() {
   glb_mboot_ptr = mboot_ptr_tmp + PAGE_OFFSET;
 
   kern_init();
+}
+
+int flag = 0;
+int thread(void *arg) {
+  while(1) {
+    if(flag == 1) {
+      printk_color(rc_black, rc_green, "B");
+      flag = 0;
+    }
+  }
+  return 0;
 }
 
 void kern_init() {
@@ -95,6 +110,16 @@ void kern_init() {
 
   printk_color(rc_black, rc_red, "\nThe Count of Physical Memory Page is: %u\n\n", phy_page_count);
   test_heap();
+
+  init_sched();
+  kernel_thread(thread, NULL);
+  enable_intr();
+  while(1) {
+    if(flag == 0) {
+      printk_color(rc_black, rc_red, "A");
+      flag = 1;
+    }
+  }
 
   while(1) {
     asm volatile ("hlt");

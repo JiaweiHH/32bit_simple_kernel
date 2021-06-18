@@ -2,12 +2,12 @@
 #include "common.h"
 #include "debug.h"
 #include "idt.h"
+#include "msched.h"
 
 #define HZ 1193180
 
 void timer_callback(pt_regs *regs) {
-  static uint32_t tick = 0;
-  printk_color(rc_black, rc_red, "Tick: %d\n", tick++);
+  schedule();
 }
 
 /**

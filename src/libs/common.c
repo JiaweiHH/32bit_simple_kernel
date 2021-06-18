@@ -15,3 +15,11 @@ inline uint16_t inw(uint16_t port) {
   asm volatile("inb %1, %0" : "=a"(ret) : "dN"(port));
   return ret;
 }
+
+inline void enable_intr() {
+  asm volatile ("sti");
+}
+
+inline void disable_intr() {
+  asm volatile ("cli" ::: "memory");
+}
