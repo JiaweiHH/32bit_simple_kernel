@@ -178,7 +178,7 @@ GDT 中每个段描述符是 8bytes，结构如下
 
 GDTR 寄存器结构：
 
-<img src="/Users/li/Library/Application Support/typora-user-images/image-20210611104821244.png" alt="image-20210611104821244" style="zoom:50%;" />
+<img src="./pic/image-20210611104821244.png" alt="image-20210611104821244" style="zoom:50%;" />
 
 > 现在的 x86 分段和分页共存 每个 segment 被进一步划分成多个 pages，我们可以让所有 segment 的地址都从 0 开始，这样就相当于没有 segment 了，这种内存划分方式称为 **平坦内存模型**。
 
