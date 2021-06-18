@@ -342,7 +342,7 @@ ISR_NOERRCODE 255		; 定义 isr255 这个函数
 
 中断的来源除了来自于硬件自身的 NMI 中断和来自于软件的 `int n` 指令造成的软件中断之外，还有来自于外部硬件设备的中断称之为 IRQ。这些中断通过 PIC(Programmable Interrupt Controller) 进行控制并传递给 CPU。在这里我们使用 8259A PIC
 
-<img src="/Users/li/Library/Application Support/typora-user-images/image-20210615191436422.png" alt="image-20210615191436422" style="zoom:50%;" />
+<img src="./pic/image-20210615191436422.png" alt="image-20210615191436422" style="zoom:50%;" />
 
 前面提到 0-31 号中断是 cpu 使用和保留的，因此这里的中断需要从 32 开始一直到 47
 
